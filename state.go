@@ -11,6 +11,6 @@ type State interface {
 	Resume(bot *ubot.Bot) (err error)
 	Update(bot *ubot.Bot, position *Position) (err error)
 	Stop(bot *ubot.Bot) (err error)
-	GetGPX(bot *ubot.Bot) (data []byte, err error)
+	GetGPX(bot *ubot.Bot, matchType string) (data []byte, err error)
 	GetCurrentPace() *Pace
 }

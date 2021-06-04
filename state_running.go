@@ -97,8 +97,8 @@ func (state *StateRunning) Stop(bot *ubot.Bot) (err error) {
 	return
 }
 
-func (state *StateRunning) GetGPX(ubot *ubot.Bot) (data []byte, err error) {
-	return makeGpx(state.positions)
+func (state *StateRunning) GetGPX(ubot *ubot.Bot, matchType string) (data []byte, err error) {
+	return makeGpx(state.positions, matchType)
 }
 
 func (state *StateRunning) GetCurrentPace() (result *Pace) {

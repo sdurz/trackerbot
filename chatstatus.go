@@ -13,11 +13,13 @@ type ChatStatus struct {
 	chatId        int64
 	state         State
 	statusMessage axon.O
+	matchMode     string
 }
 
 func NewChatStatus(bot *ubot.Bot, chatId int64) (result *ChatStatus) {
 	result = &ChatStatus{
-		chatId: chatId,
+		chatId:    chatId,
+		matchMode: "hike",
 	}
 	result.SetState(bot, &StateReady{result})
 	return
@@ -45,8 +47,8 @@ func (s *ChatStatus) Append(bot *ubot.Bot, position *Position) {
 	s.state.Update(bot, position)
 }
 
-func (s *ChatStatus) SendGPX(bot *ubot.Bot) (result []byte, err error) {
-	if byteData, err := s.state.GetGPX(bot); err == nil {
+func (s *ChatStatus) SendGPX(bot *ubot.Bot, matchType string) (result []byte, err error) {
+	if byteData, err := s.state.GetGPX(bot, matchType); err == nil {
 		fileName := fmt.Sprintf("TelegramTrack-%v.gpx", time.Now().Format("20060102-150405"))
 		uploadFile, _ := ubot.NewBytesUploadFile(fileName, byteData)
 		bot.SendDocument(axon.O{

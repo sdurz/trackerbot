@@ -75,7 +75,7 @@ func MessagePositionUpdateHandler(ctx context.Context, bot *ubot.Bot, message ax
 func GetGpxCommandHandler(ctx context.Context, bot *ubot.Bot, message axon.O) (done bool, err error) {
 	chatId, _ := message.GetInteger("chat.id")
 	status := findOrCreateStatus(bot, chatId)
-	status.SendGPX(bot)
+	status.SendGPX(bot, "")
 	done = true
 	return
 }
@@ -128,7 +128,13 @@ func CommandMessageHandler(ctx context.Context, bot *ubot.Bot, message axon.O) (
 		case "Stop":
 			status.StopTracking(bot)
 		case "Get GPX":
-			status.SendGPX(bot)
+			status.SendGPX(bot, "")
+		case btnBikeGPX:
+			status.SendGPX(bot, "bike")
+		case btnHikeGPX:
+			status.SendGPX(bot, "hike")
+		case btnCarGPX:
+			status.SendGPX(bot, "car")
 		}
 		bot.DeleteMessage(axon.O{
 			"chat_id":    chatId,

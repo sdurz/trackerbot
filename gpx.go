@@ -40,7 +40,7 @@ type TrkptEl struct {
 	XMLName interface{} `xml:"trkpt"`
 }
 
-func makeGpx(positions []*Position) (result []byte, err error) {
+func makeGpx(positions []*Position, matchType string) (result []byte, err error) {
 	if len(positions) == 0 {
 		err = errors.New("empty positions in status")
 		return
@@ -70,16 +70,22 @@ func makeGpx(positions []*Position) (result []byte, err error) {
 		})
 	}
 
-	result, err = xml.MarshalIndent(gpx, "", " ")
-
-	resp, err := http.Post("https://sdurz.me/match?profile=hike&type=gpx", "application/gpx+xml", bytes.NewBuffer(result))
-	if err != nil {
+	if result, err = xml.MarshalIndent(gpx, "", " "); err != nil {
 		return
 	}
 
+	if matchType != "" {
+		result, err = mapMatch(result, matchType)
+	}
+	return
+}
+
+func mapMatch(data []byte, matchType string) (result []byte, err error) {
+	resp, err := http.Post("https://sdurz.me/match?vehicle="+matchType+"&type=gpx", "application/gpx+xml", bytes.NewBuffer(result))
+	if err != nil {
+		return
+	}
 	defer resp.Body.Close()
-
 	result, err = ioutil.ReadAll(resp.Body)
-
 	return
 }

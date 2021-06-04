@@ -7,6 +7,13 @@ import (
 	"github.com/sdurz/ubot"
 )
 
+const (
+	btnCarGPX  = "🚗 Car GPX"
+	btnHikeGPX = "🚶🏽 Hike GPX"
+	btnBikeGPX = "🚴 Bike GPX"
+	btnWaste   = "🗑️ Waste"
+)
+
 type StateStopped struct {
 	parent        *ChatStatus
 	positions     []*Position
@@ -16,12 +23,19 @@ type StateStopped struct {
 func (state *StateStopped) EnterState(bot *ubot.Bot, chatId int64) (err error) {
 	_, err = bot.SendMessage(axon.O{
 		"chat_id": state.parent.chatId,
-		"text":    "Tracking complete! Share your position to start tracking again",
+		"text":    "Tracking complete! Share your position again to restart tracking",
 		"reply_markup": axon.O{
+			"resize_keyboard": true,
 			"keyboard": axon.A{
 				axon.A{
 					axon.O{
-						"text": "Get GPX",
+						"text": btnHikeGPX,
+					},
+					axon.O{
+						"text": btnBikeGPX,
+					},
+					axon.O{
+						"text": btnCarGPX,
 					},
 				},
 			},
@@ -59,11 +73,11 @@ func (state *StateStopped) Start(bot *ubot.Bot, position *Position) (err error) 
 	return
 }
 
-func (state *StateStopped) GetGPX(bot *ubot.Bot) (reesult []byte, err error) {
-	if state.downloadCount < 3 {
-		reesult, err = makeGpx(state.positions)
+func (state *StateStopped) GetGPX(bot *ubot.Bot, matchType string) (reesult []byte, err error) {
+	if state.downloadCount < 10 {
+		reesult, err = makeGpx(state.positions, matchType)
 		state.downloadCount++
-		if state.downloadCount == 3 {
+		if state.downloadCount == 10 {
 			bot.SendMessage(axon.O{
 				"chat_id": state.parent.chatId,
 				"text":    "Maximum no. of downloads reached",

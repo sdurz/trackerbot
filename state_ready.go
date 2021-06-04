@@ -55,7 +55,7 @@ func (state *StateReady) Stop(bot *ubot.Bot) (err error) {
 	return
 }
 
-func (state *StateReady) GetGPX(ubot *ubot.Bot) (data []byte, err error) {
+func (state *StateReady) GetGPX(ubot *ubot.Bot, matchType string) (data []byte, err error) {
 	// no op
 	err = errors.New("no tracking data in idle state")
 	return
