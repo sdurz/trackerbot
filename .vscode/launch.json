@@ -12,6 +12,7 @@
             "program": "${fileDirname}",
             "args": [
                 "-apiKey", "1753090109:AAGzvsGQiw0Rg0VdiAIQD5MN9AJKXlw8rSo",
+                "-graphHopperUrl", "https://sdurz.me",
             ]
         }
     ]

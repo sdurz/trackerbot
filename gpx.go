@@ -5,6 +5,7 @@ import (
 	"encoding/xml"
 	"errors"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"time"
 )
@@ -40,7 +41,7 @@ type TrkptEl struct {
 	XMLName interface{} `xml:"trkpt"`
 }
 
-func makeGpx(positions []*Position, matchType string) (result []byte, err error) {
+func makeGpx(positions []*Position, vehicle string) (result []byte, err error) {
 	if len(positions) == 0 {
 		err = errors.New("empty positions in status")
 		return
@@ -61,7 +62,6 @@ func makeGpx(positions []*Position, matchType string) (result []byte, err error)
 			},
 		},
 	}
-
 	for _, el := range positions {
 		gpx.Trk.Trkseg.Trkpt = append(gpx.Trk.Trkseg.Trkpt, TrkptEl{
 			Time: el.when.Format(time.RFC3339),
@@ -69,23 +69,23 @@ func makeGpx(positions []*Position, matchType string) (result []byte, err error)
 			Lon:  el.longitude,
 		})
 	}
-
 	if result, err = xml.MarshalIndent(gpx, "", " "); err != nil {
 		return
 	}
-
-	if matchType != "" {
-		result, err = mapMatch(result, matchType)
+	if vehicle != "" {
+		result, err = mapMatch(result, vehicle)
 	}
 	return
 }
 
-func mapMatch(data []byte, matchType string) (result []byte, err error) {
-	resp, err := http.Post("https://sdurz.me/match?vehicle="+matchType+"&type=gpx", "application/gpx+xml", bytes.NewBuffer(result))
+func mapMatch(data []byte, vehicle string) (result []byte, err error) {
+	log.Println("Map matching .gpx file")
+	resp, err := http.Post(graphHopperUrl+"/match?vehicle="+vehicle+"&type=gpx", "application/gpx+xml", bytes.NewBuffer(data))
 	if err != nil {
 		return
 	}
 	defer resp.Body.Close()
+
 	result, err = ioutil.ReadAll(resp.Body)
 	return
 }

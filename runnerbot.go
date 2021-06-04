@@ -14,10 +14,11 @@ import (
 )
 
 var (
-	apiKey     string
-	webhookUrl string
-	serverBind string
-	signals    chan os.Signal
+	apiKey         string
+	webhookUrl     string
+	graphHopperUrl string
+	serverBind     string
+	signals        chan os.Signal
 
 	lrucache *lru.Cache
 )
@@ -25,6 +26,7 @@ var (
 func init() {
 	flag.StringVar(&apiKey, "apiKey", "", "api key")
 	flag.StringVar(&webhookUrl, "webhookUrl", "", "webhook url")
+	flag.StringVar(&graphHopperUrl, "graphHopperUrl", "http://localhost:8989", "graphhopper url")
 	flag.StringVar(&serverBind, "serverBind", "", "server:port")
 
 	signals = make(chan os.Signal, 1)
