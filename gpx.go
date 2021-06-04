@@ -1,8 +1,11 @@
 package main
 
 import (
+	"bytes"
 	"encoding/xml"
 	"errors"
+	"io/ioutil"
+	"net/http"
 	"time"
 )
 
@@ -33,7 +36,6 @@ type Trkseg struct {
 type TrkptEl struct {
 	Lat     float64     `xml:"lat,attr"`
 	Lon     float64     `xml:"lon,attr"`
-	Ele     float64     `xml:"ele"`
 	Time    string      `xml:"time"`
 	XMLName interface{} `xml:"trkpt"`
 }
@@ -62,7 +64,6 @@ func makeGpx(positions []*Position) (result []byte, err error) {
 
 	for _, el := range positions {
 		gpx.Trk.Trkseg.Trkpt = append(gpx.Trk.Trkseg.Trkpt, TrkptEl{
-			Ele:  0.,
 			Time: el.when.Format(time.RFC3339),
 			Lat:  el.latitude,
 			Lon:  el.longitude,
@@ -70,5 +71,15 @@ func makeGpx(positions []*Position) (result []byte, err error) {
 	}
 
 	result, err = xml.MarshalIndent(gpx, "", " ")
+
+	resp, err := http.Post("https://sdurz.me/match?profile=hike&type=gpx", "application/gpx+xml", bytes.NewBuffer(result))
+	if err != nil {
+		return
+	}
+
+	defer resp.Body.Close()
+
+	result, err = ioutil.ReadAll(resp.Body)
+
 	return
 }

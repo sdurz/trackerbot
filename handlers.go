@@ -90,7 +90,8 @@ func StartCommandHandler(ctx context.Context, bot *ubot.Bot, message axon.O) (do
 func StopCommandHandler(ctx context.Context, bot *ubot.Bot, message axon.O) (done bool, err error) {
 	chatId, _ := message.GetInteger("chat.id")
 	bot.SendMessage(axon.O{
-		"text": "Goodbye!",
+		"chat_id": chatId,
+		"text":    "Goodbye!",
 	})
 	lrucache.Remove(chatId)
 	done = true
@@ -99,10 +100,8 @@ func StopCommandHandler(ctx context.Context, bot *ubot.Bot, message axon.O) (don
 
 func PauseTrackingCommandHandler(ctx context.Context, bot *ubot.Bot, message axon.O) (done bool, err error) {
 	chatId, _ := message.GetInteger("chat.id")
-	if cached, ok := lrucache.Get(chatId); ok {
-		status := cached.(*ChatStatus)
-		status.PauseTracking(bot)
-	}
+	status := findOrCreateStatus(bot, chatId)
+	status.PauseTracking(bot)
 	done = true
 	return
 }
@@ -130,6 +129,7 @@ func CommandMessageHandler(ctx context.Context, bot *ubot.Bot, message axon.O) (
 			status.StopTracking(bot)
 		case "Get GPX":
 			status.SendGPX(bot)
+		}
 		bot.DeleteMessage(axon.O{
 			"chat_id":    chatId,
 			"message_id": messageId,

@@ -59,14 +59,25 @@ func (state *StateStopped) Start(bot *ubot.Bot, position *Position) (err error) 
 	return
 }
 
-func (state *StateStopped) GetGPX(bot *ubot.Bot) (data []byte, err error) {
+func (state *StateStopped) GetGPX(bot *ubot.Bot) (reesult []byte, err error) {
 	if state.downloadCount < 3 {
-		data, err = makeGpx(state.positions)
+		reesult, err = makeGpx(state.positions)
+		state.downloadCount++
+		if state.downloadCount == 3 {
+			bot.SendMessage(axon.O{
+				"chat_id": state.parent.chatId,
+				"text":    "Maximum no. of downloads reached",
+				"reply_markup": axon.O{
+					"remove_keyboard": true,
+				},
+			})
+		}
 	} else {
 		bot.SendMessage(axon.O{
-			"text": "Download exceeded",
+			"chat_id": state.parent.chatId,
+			"text":    "Max no. of downloads exceeded",
 		})
-		err = errors.New("too many downloads")
+		err = errors.New("to many downloads")
 	}
 	return
 }

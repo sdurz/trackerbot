@@ -49,9 +49,8 @@ func (s *ChatStatus) SendGPX(bot *ubot.Bot) (result []byte, err error) {
 	if byteData, err := s.state.GetGPX(bot); err == nil {
 		fileName := fmt.Sprintf("TelegramTrack-%v.gpx", time.Now().Format("20060102-150405"))
 		uploadFile, _ := ubot.NewBytesUploadFile(fileName, byteData)
-		chatId, _ := s.statusMessage.GetInteger("chat_id")
 		bot.SendDocument(axon.O{
-			"chat_id":  chatId,
+			"chat_id":  s.chatId,
 			"document": uploadFile,
 		})
 	}
