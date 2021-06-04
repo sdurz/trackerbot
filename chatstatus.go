@@ -11,16 +11,15 @@ import (
 
 type ChatStatus struct {
 	chatId        int64
-	mapMatching   bool
 	state         State
 	statusMessage axon.O
 }
 
-func NewChatStatus(chatId int64) (result *ChatStatus) {
+func NewChatStatus(bot *ubot.Bot, chatId int64) (result *ChatStatus) {
 	result = &ChatStatus{
 		chatId: chatId,
 	}
-	result.state = &StateInitial{result}
+	result.SetState(bot, &StateReady{result})
 	return
 }
 
@@ -46,7 +45,7 @@ func (s *ChatStatus) Append(bot *ubot.Bot, position *Position) {
 	s.state.Update(bot, position)
 }
 
-func (s *ChatStatus) SendGPX(bot *ubot.Bot) (date []byte, err error) {
+func (s *ChatStatus) SendGPX(bot *ubot.Bot) (result []byte, err error) {
 	if byteData, err := s.state.GetGPX(bot); err == nil {
 		fileName := fmt.Sprintf("TelegramTrack-%v.gpx", time.Now().Format("20060102-150405"))
 		uploadFile, _ := ubot.NewBytesUploadFile(fileName, byteData)

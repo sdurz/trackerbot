@@ -26,7 +26,6 @@ func messagePosition(message axon.O) (chatId int64, result *Position, err error)
 			return
 		}
 	}
-
 	result = &Position{
 		time.Unix(date, 0),
 		location["latitude"].(float64),
@@ -35,75 +34,116 @@ func messagePosition(message axon.O) (chatId int64, result *Position, err error)
 	return
 }
 
-func MessagePositionHandler(ctx context.Context, b *ubot.Bot, message axon.O) (done bool, err error) {
-	var (
-		chatId   int64
-		position *Position
-		status   *ChatStatus
-	)
-
-	if chatId, position, err = messagePosition(message); err == nil {
-		status = NewChatStatus(chatId)
-		lrucache.Add(chatId, status)
-
-		if err = status.StartTracking(b, position); err != nil {
-			log.Println(err)
-			lrucache.Remove(chatId)
-		}
-	}
-	return
-}
-
-func MessagePositionUpdateHandler(ctx context.Context, b *ubot.Bot, message axon.O) (done bool, err error) {
-	var (
-		chatId   int64
-		position *Position
-		status   *ChatStatus
-	)
-
-	if chatId, position, err = messagePosition(message); err == nil {
-		if cached, ok := lrucache.Get(chatId); ok {
-			status = cached.(*ChatStatus)
-			status.state.Update(b, position)
-		}
-	}
-	return
-}
-
-func GetGpxCommandHandler(ctx context.Context, b *ubot.Bot, message axon.O) (done bool, err error) {
-	chatId, _ := message.GetInteger("chat.id")
+func findOrCreateStatus(bot *ubot.Bot, chatId int64) (result *ChatStatus) {
 	if statusI, ok := lrucache.Get(chatId); ok {
-		status := statusI.(*ChatStatus)
-		status.SendGPX(b)
+		result = statusI.(*ChatStatus)
+	} else {
+		result = NewChatStatus(bot, chatId)
+		lrucache.Add(chatId, result)
 	}
 	return
 }
 
-func PauseTrackingCommandHandler(ctx context.Context, b *ubot.Bot, message axon.O) (done bool, err error) {
+func MessagePositionHandler(ctx context.Context, bot *ubot.Bot, message axon.O) (done bool, err error) {
+	var (
+		chatId   int64
+		position *Position
+	)
+
+	if chatId, position, err = messagePosition(message); err == nil {
+		status := findOrCreateStatus(bot, chatId)
+		status.StartTracking(bot, position)
+	}
+	done = true
+	return
+}
+
+func MessagePositionUpdateHandler(ctx context.Context, bot *ubot.Bot, message axon.O) (done bool, err error) {
+	var (
+		chatId   int64
+		position *Position
+	)
+
+	if chatId, position, err = messagePosition(message); err == nil {
+		status := findOrCreateStatus(bot, chatId)
+		status.state.Update(bot, position)
+	}
+	done = true
+	return
+}
+
+func GetGpxCommandHandler(ctx context.Context, bot *ubot.Bot, message axon.O) (done bool, err error) {
+	chatId, _ := message.GetInteger("chat.id")
+	status := findOrCreateStatus(bot, chatId)
+	status.SendGPX(bot)
+	done = true
+	return
+}
+
+func StartCommandHandler(ctx context.Context, bot *ubot.Bot, message axon.O) (done bool, err error) {
+	chatId, _ := message.GetInteger("chat.id")
+	findOrCreateStatus(bot, chatId)
+	done = true
+	return
+}
+
+func StopCommandHandler(ctx context.Context, bot *ubot.Bot, message axon.O) (done bool, err error) {
+	chatId, _ := message.GetInteger("chat.id")
+	bot.SendMessage(axon.O{
+		"text": "Goodbye!",
+	})
+	lrucache.Remove(chatId)
+	done = true
+	return
+}
+
+func PauseTrackingCommandHandler(ctx context.Context, bot *ubot.Bot, message axon.O) (done bool, err error) {
 	chatId, _ := message.GetInteger("chat.id")
 	if cached, ok := lrucache.Get(chatId); ok {
 		status := cached.(*ChatStatus)
-		status.PauseTracking(b)
+		status.PauseTracking(bot)
 	}
+	done = true
 	return
 }
 
 func ResumeTrackingCommandHandler(ctx context.Context, bot *ubot.Bot, message axon.O) (done bool, err error) {
 	chatId, _ := message.GetInteger("chat.id")
-	if cached, ok := lrucache.Get(chatId); ok {
-		status := cached.(*ChatStatus)
-		status.ResumeTracking(bot)
-	}
+	status := findOrCreateStatus(bot, chatId)
+	status.ResumeTracking(bot)
+	done = true
 	return
 }
 
-func CallbackQueryHandler(ctx context.Context, b *ubot.Bot, message axon.O) (done bool, err error) {
-	log.Println("callback query")
+func CommandMessageHandler(ctx context.Context, bot *ubot.Bot, message axon.O) (done bool, err error) {
 	chatId, _ := message.GetInteger("chat.id")
 	if cached, ok := lrucache.Get(chatId); ok {
 		status := cached.(*ChatStatus)
-		data, _ := message.GetString("data")
-		status.Callback(b, data)
+		text, _ := message.GetString("text")
+		messageId, _ := message.GetInteger("message_id")
+		switch text {
+		case "Pause":
+			status.PauseTracking(bot)
+		case "Resume":
+			status.ResumeTracking(bot)
+		case "Stop":
+			status.StopTracking(bot)
+		case "Get GPX":
+			status.SendGPX(bot)
+		bot.DeleteMessage(axon.O{
+			"chat_id":    chatId,
+			"message_id": messageId,
+		})
 	}
+	done = true
+	return
+}
+
+func CallbackQueryHandler(ctx context.Context, bot *ubot.Bot, message axon.O) (done bool, err error) {
+	log.Println("callback query")
+	chatId, _ := message.GetInteger("chat.id")
+	data, _ := message.GetString("data")
+	status := findOrCreateStatus(bot, chatId)
+	status.Callback(bot, data)
 	return
 }

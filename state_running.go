@@ -17,34 +17,49 @@ type StateRunning struct {
 }
 
 func (state *StateRunning) EnterState(bot *ubot.Bot, chatId int64) (err error) {
-	messageId, _ := state.parent.statusMessage.GetInteger("message_id")
-	_, err = bot.EditMessageText(axon.O{
+	if message, err := bot.SendMessage(axon.O{
 		"chat_id":    state.parent.chatId,
-		"message_id": messageId,
-		"text":       "Tracking started",
+		"text":       "Tracking **started** at " + time.Now().Format("15:04:05"),
 		"parse_mode": "MarkdownV2",
 		"reply_markup": axon.O{
 			"keyboard": axon.A{
 				axon.A{
 					axon.O{
-						"text":          "Pause",
-						"callback_data": "pause",
+						"text": "Stop",
+					},
+				},
+				axon.A{
+					axon.O{
+						"text": "Pause",
 					},
 				},
 			},
 			"resize_keyboard": true,
 		},
-	})
+	}); err == nil {
+		state.parent.statusMessage = message
+	}
 	return
 }
 
-func (state *StateRunning) Start(bot *ubot.Bot, posiition *Position) (err error) {
-	// no op
+func (state *StateRunning) Start(bot *ubot.Bot, position *Position) (err error) {
+	bot.SendMessage(axon.O{
+		"chat_id": state.parent.chatId,
+		"text":    "Current tracking aborted, now restarting...",
+	})
+	err = state.parent.SetState(
+		bot,
+		&StateRunning{
+			parent:    state.parent,
+			positions: []*Position{position},
+		},
+	)
 	return
 }
 
 func (state *StateRunning) Pause(bot *ubot.Bot) (err error) {
 	state.parent.SetState(bot, &StatePaused{
+		parent:    state.parent,
 		positions: state.positions,
 	})
 	return
@@ -61,26 +76,22 @@ func (state *StateRunning) Update(bot *ubot.Bot, position *Position) (err error)
 	}
 	state.positions = append(state.positions, position)
 
-	messageId, _ := state.parent.statusMessage.GetInteger("message_id")
 	chatId, _ := state.parent.statusMessage.GetInteger("chat.id")
-	bot.EditMessageText(axon.O{
-		"chat_id":    chatId,
-		"message_id": messageId,
-		"parse_mode": "MarkdownV2",
-		"text":       fmt.Sprintf("Current pace: **%s**\nUpdated: %s", state.GetCurrentPace(), time.Now().Format("15:04:05")),
+	bot.SendMessage(axon.O{
+		"chat_id": chatId,
+		"text":    fmt.Sprintf("Current pace: **%s**\nUpdated: %s", state.GetCurrentPace(), time.Now().Format("15:04:05")),
 	})
 	return
 }
 
 func (state *StateRunning) Stop(bot *ubot.Bot) (err error) {
-	messageId, _ := state.parent.statusMessage.GetInteger("message_id")
-	bot.EditMessageText(axon.O{
+	bot.SendMessage(axon.O{
 		"chat_id":    state.parent.chatId,
-		"message_id": messageId,
 		"parse_mode": "MarkdownV2",
 		"text":       fmt.Sprintf("Stopped at **%s**", time.Now().Format("15:04:05")),
 	})
 	state.parent.SetState(bot, &StateStopped{
+		parent:    state.parent,
 		positions: state.positions,
 	})
 	return

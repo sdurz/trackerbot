@@ -45,12 +45,14 @@ func main() {
 		WebhookUrl: webhookUrl,
 		ServerBind: serverBind,
 	})
+	bot.AddMessageHandler(ubot.MessageHasCommand("start"), StartCommandHandler)
+	bot.AddMessageHandler(ubot.MessageHasCommand("stop"), StopCommandHandler)
 	bot.AddMessageHandler(ubot.And(ubot.MessageIsPrivate, ubot.MessageHasLocation), MessagePositionHandler)
 	bot.AddEditedMessageHandler(ubot.And(ubot.MessageIsPrivate, ubot.MessageHasLocation), MessagePositionUpdateHandler)
 	bot.AddMessageHandler(ubot.MessageHasCommand("getgpx"), GetGpxCommandHandler)
 	bot.AddMessageHandler(ubot.MessageHasCommand("pause"), PauseTrackingCommandHandler)
 	bot.AddMessageHandler(ubot.MessageHasCommand("resume"), ResumeTrackingCommandHandler)
-	bot.AddCallbackQueryHandler(ubot.Always, CallbackQueryHandler)
+	bot.AddMessageHandler(ubot.MessageIsPrivate, CommandMessageHandler)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	updatesSource := ubot.ServerSource
