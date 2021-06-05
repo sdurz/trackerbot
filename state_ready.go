@@ -11,7 +11,7 @@ type StateReady struct {
 	parent *ChatStatus
 }
 
-func (state *StateReady) Start(bot *ubot.Bot, position *Position) (err error) {
+func (state *StateReady) BeginTracking(bot *ubot.Bot, position *Position) (err error) {
 	err = state.parent.SetState(
 		bot,
 		&StateRunning{
@@ -35,22 +35,22 @@ func (state *StateReady) EnterState(bot *ubot.Bot, chatId int64) (err error) {
 	return
 }
 
-func (state *StateReady) Pause(bot *ubot.Bot) (err error) {
+func (state *StateReady) PauseTracking(bot *ubot.Bot) (err error) {
 	// no op
 	return
 }
 
-func (state *StateReady) Resume(bot *ubot.Bot) (err error) {
+func (state *StateReady) ResumeTracking(bot *ubot.Bot) (err error) {
 	// no op
 	return
 }
 
-func (state *StateReady) Update(bot *ubot.Bot, position *Position) (err error) {
+func (state *StateReady) UpdateTracking(bot *ubot.Bot, position *Position) (err error) {
 	// no op
 	return
 }
 
-func (state *StateReady) Stop(bot *ubot.Bot) (err error) {
+func (state *StateReady) EndTracking(bot *ubot.Bot) (err error) {
 	// no op
 	return
 }

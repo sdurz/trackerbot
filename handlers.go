@@ -66,7 +66,7 @@ func MessagePositionUpdateHandler(ctx context.Context, bot *ubot.Bot, message ax
 
 	if chatId, position, err = messagePosition(message); err == nil {
 		status := findOrCreateStatus(bot, chatId)
-		status.state.Update(bot, position)
+		status.state.UpdateTracking(bot, position)
 	}
 	done = true
 	return
@@ -75,7 +75,7 @@ func MessagePositionUpdateHandler(ctx context.Context, bot *ubot.Bot, message ax
 func GetGpxCommandHandler(ctx context.Context, bot *ubot.Bot, message axon.O) (done bool, err error) {
 	chatId, _ := message.GetInteger("chat.id")
 	status := findOrCreateStatus(bot, chatId)
-	status.SendGPX(bot, "")
+	status.SendGPX(bot)
 	done = true
 	return
 }
@@ -98,6 +98,33 @@ func StopCommandHandler(ctx context.Context, bot *ubot.Bot, message axon.O) (don
 	return
 }
 
+func SetProfileCommandHandler(ctx context.Context, bot *ubot.Bot, message axon.O) (done bool, err error) {
+	chatId, _ := message.GetInteger("chat.id")
+	bot.SendMessage(axon.O{
+		"chat_id": chatId,
+		"text":    "Choose your vehicle",
+		"reply_markup": axon.O{
+			"inline_keyboard": axon.A{
+				axon.A{
+					axon.O{
+						"text":          "🚶🏽 Hike",
+						"callback_data": "set hike",
+					},
+				},
+				axon.A{
+					axon.O{
+						"text":          "🚴 Bike",
+						"callback_data": "set bike",
+					},
+				},
+			},
+		},
+	})
+	lrucache.Remove(chatId)
+	done = true
+	return
+}
+
 func PauseTrackingCommandHandler(ctx context.Context, bot *ubot.Bot, message axon.O) (done bool, err error) {
 	chatId, _ := message.GetInteger("chat.id")
 	status := findOrCreateStatus(bot, chatId)
@@ -114,6 +141,14 @@ func ResumeTrackingCommandHandler(ctx context.Context, bot *ubot.Bot, message ax
 	return
 }
 
+func EndTrackingCommandHandler(ctx context.Context, bot *ubot.Bot, message axon.O) (done bool, err error) {
+	chatId, _ := message.GetInteger("chat.id")
+	status := findOrCreateStatus(bot, chatId)
+	status.EndTracking(bot)
+	done = true
+	return
+}
+
 func CommandMessageHandler(ctx context.Context, bot *ubot.Bot, message axon.O) (done bool, err error) {
 	chatId, _ := message.GetInteger("chat.id")
 	if cached, ok := lrucache.Get(chatId); ok {
@@ -126,15 +161,9 @@ func CommandMessageHandler(ctx context.Context, bot *ubot.Bot, message axon.O) (
 		case "Resume":
 			status.ResumeTracking(bot)
 		case "Stop":
-			status.StopTracking(bot)
+			status.EndTracking(bot)
 		case "Get GPX":
-			status.SendGPX(bot, "")
-		case btnBikeGPX:
-			status.SendGPX(bot, "bike")
-		case btnHikeGPX:
-			status.SendGPX(bot, "hike")
-		case btnCarGPX:
-			status.SendGPX(bot, "car")
+			status.SendGPX(bot)
 		}
 		bot.DeleteMessage(axon.O{
 			"chat_id":    chatId,

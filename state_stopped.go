@@ -44,25 +44,25 @@ func (state *StateStopped) EnterState(bot *ubot.Bot, chatId int64) (err error) {
 	return
 }
 
-func (state *StateStopped) Pause(bot *ubot.Bot) (err error) {
+func (state *StateStopped) PauseTracking(bot *ubot.Bot) (err error) {
 	return
 }
 
-func (state *StateStopped) Resume(bot *ubot.Bot) (err error) {
+func (state *StateStopped) ResumeTracking(bot *ubot.Bot) (err error) {
 	// no op
 	return
 }
 
-func (state *StateStopped) Update(bot *ubot.Bot, position *Position) (err error) {
+func (state *StateStopped) UpdateTracking(bot *ubot.Bot, position *Position) (err error) {
 	return
 }
 
-func (state *StateStopped) Stop(bot *ubot.Bot) (err error) {
+func (state *StateStopped) EndTracking(bot *ubot.Bot) (err error) {
 	// no op
 	return
 }
 
-func (state *StateStopped) Start(bot *ubot.Bot, position *Position) (err error) {
+func (state *StateStopped) BeginTracking(bot *ubot.Bot, position *Position) (err error) {
 	err = state.parent.SetState(
 		bot,
 		&StateRunning{

@@ -30,7 +30,7 @@ func (state *StatePaused) EnterState(bot *ubot.Bot, chatId int64) (err error) {
 	return
 }
 
-func (state *StatePaused) Start(bot *ubot.Bot, position *Position) (err error) {
+func (state *StatePaused) BeginTracking(bot *ubot.Bot, position *Position) (err error) {
 	bot.SendMessage(axon.O{
 		"chat_id": state.parent.chatId,
 		"text":    "Current tracking aborted, now restarting...",
@@ -45,11 +45,11 @@ func (state *StatePaused) Start(bot *ubot.Bot, position *Position) (err error) {
 	return
 }
 
-func (state *StatePaused) Pause(bot *ubot.Bot) (err error) {
+func (state *StatePaused) PauseTracking(bot *ubot.Bot) (err error) {
 	return
 }
 
-func (state *StatePaused) Resume(bot *ubot.Bot) (err error) {
+func (state *StatePaused) ResumeTracking(bot *ubot.Bot) (err error) {
 	err = state.parent.SetState(bot,
 		&StateRerunning{
 			StateRunning{
@@ -60,11 +60,11 @@ func (state *StatePaused) Resume(bot *ubot.Bot) (err error) {
 	return
 }
 
-func (state *StatePaused) Update(bot *ubot.Bot, position *Position) (err error) {
+func (state *StatePaused) UpdateTracking(bot *ubot.Bot, position *Position) (err error) {
 	return
 }
 
-func (state *StatePaused) Stop(bot *ubot.Bot) (err error) {
+func (state *StatePaused) EndTracking(bot *ubot.Bot) (err error) {
 	return
 }
 

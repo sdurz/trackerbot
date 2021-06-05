@@ -27,7 +27,7 @@ func init() {
 	flag.StringVar(&apiKey, "apiKey", "", "api key")
 	flag.StringVar(&webhookUrl, "webhookUrl", "", "webhook url")
 	flag.StringVar(&graphHopperUrl, "graphHopperUrl", "http://localhost:8989", "graphhopper url")
-	flag.StringVar(&serverBind, "serverBind", "", "server:port")
+	flag.StringVar(&serverBind, "serverBind", "localhost:9992", "server:port")
 
 	signals = make(chan os.Signal, 1)
 	signal.Notify(signals, os.Interrupt)
@@ -54,6 +54,8 @@ func main() {
 	bot.AddMessageHandler(ubot.MessageHasCommand("getgpx"), GetGpxCommandHandler)
 	bot.AddMessageHandler(ubot.MessageHasCommand("pause"), PauseTrackingCommandHandler)
 	bot.AddMessageHandler(ubot.MessageHasCommand("resume"), ResumeTrackingCommandHandler)
+	bot.AddMessageHandler(ubot.MessageHasCommand("end"), EndTrackingCommandHandler)
+	bot.AddMessageHandler(ubot.MessageHasCommand("setprofile"), ResumeTrackingCommandHandler)
 	bot.AddMessageHandler(ubot.MessageIsPrivate, CommandMessageHandler)
 
 	ctx, cancel := context.WithCancel(context.Background())
