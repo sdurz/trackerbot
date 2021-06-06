@@ -1,5 +1,4 @@
-module github.com/sdurz/runnerbot
-
+module github.com/sdurz/trackerbot
 go 1.15
 
 require (
