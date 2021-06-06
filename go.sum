@@ -1,5 +1,7 @@
 github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da h1:oI5xCqsCo564l8iNU+DwB5epxmsaqB+rhGL0m5jtYqE=
 github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da/go.mod h1:cIg4eruTrX1D+g88fzRXU5OdNfaM+9IcxsU14FzY7Hc=
+github.com/hashicorp/golang-lru v0.5.4 h1:YDjusn29QI/Das2iO9M0BHnIbxPeyuCHsjMW+lJfyTc=
+github.com/hashicorp/golang-lru v0.5.4/go.mod h1:iADmTwqILo4mZ8BN3D2Q6+9jd8WM5uGBxy+E8yxSoD4=
 github.com/sdurz/axon v0.0.0-20210423090506-b7997c4900f0 h1:W8GMXVa6i3kR2CUajxKCLbV7Gpi0GbMA5zTOnfVAy6s=
 github.com/sdurz/axon v0.0.0-20210423090506-b7997c4900f0/go.mod h1:nVkVhRs6ld7JRt9W7SmSJnnMc7tLS+nvudgio4idQ3A=
 github.com/sdurz/ubot v0.0.0-20210524102937-ba71d096556c h1:DLA5FSIQbZJ7xL8sQDIPdteMq6J7KYMtDAD+s0flv/c=

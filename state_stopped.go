@@ -7,13 +7,6 @@ import (
 	"github.com/sdurz/ubot"
 )
 
-const (
-	btnCarGPX  = "🚗 Car GPX"
-	btnHikeGPX = "🚶🏽 Hike GPX"
-	btnBikeGPX = "🚴 Bike GPX"
-	btnWaste   = "🗑️ Waste"
-)
-
 type StateStopped struct {
 	parent        *ChatStatus
 	positions     []*Position
@@ -21,30 +14,25 @@ type StateStopped struct {
 }
 
 func (state *StateStopped) EnterState(bot *ubot.Bot, chatId int64) (err error) {
+	pinnedId, _ := state.parent.pinnedMessage.GetInteger("message_id")
+	bot.EditMessageText(axon.O{
+		"chat_id":    state.parent.chatId,
+		"message_id": pinnedId,
+		"text":       "State: **ended**, Pace: --:--",
+	})
 	_, err = bot.SendMessage(axon.O{
 		"chat_id": state.parent.chatId,
 		"text":    "Tracking complete! Share your position again to restart tracking",
 		"reply_markup": axon.O{
-			"resize_keyboard": true,
-			"keyboard": axon.A{
-				axon.A{
-					axon.O{
-						"text": btnHikeGPX,
-					},
-					axon.O{
-						"text": btnBikeGPX,
-					},
-					axon.O{
-						"text": btnCarGPX,
-					},
-				},
-			},
+			"remove_keyboard": true,
 		},
 	})
+	state.parent.SendGPX(bot)
 	return
 }
 
 func (state *StateStopped) PauseTracking(bot *ubot.Bot) (err error) {
+	// no op
 	return
 }
 
@@ -54,6 +42,7 @@ func (state *StateStopped) ResumeTracking(bot *ubot.Bot) (err error) {
 }
 
 func (state *StateStopped) UpdateTracking(bot *ubot.Bot, position *Position) (err error) {
+	// no op
 	return
 }
 

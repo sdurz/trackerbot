@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"log"
 	"time"
 
 	"github.com/sdurz/axon"
@@ -80,6 +79,17 @@ func GetGpxCommandHandler(ctx context.Context, bot *ubot.Bot, message axon.O) (d
 	return
 }
 
+func GetHelpCommandHandler(ctx context.Context, bot *ubot.Bot, message axon.O) (done bool, err error) {
+	chatId, _ := message.GetInteger("chat.id")
+	bot.SendMessage(axon.O{
+		"chat_id":    chatId,
+		"text":       helpMarkup,
+		"parse_mode": "MarkdownV2",
+	})
+	done = true
+	return
+}
+
 func StartCommandHandler(ctx context.Context, bot *ubot.Bot, message axon.O) (done bool, err error) {
 	chatId, _ := message.GetInteger("chat.id")
 	findOrCreateStatus(bot, chatId)
@@ -115,6 +125,12 @@ func SetProfileCommandHandler(ctx context.Context, bot *ubot.Bot, message axon.O
 					axon.O{
 						"text":          "🚴 Bike",
 						"callback_data": "set bike",
+					},
+				},
+				axon.A{
+					axon.O{
+						"text":          "🚗 Car",
+						"callback_data": "set car",
 					},
 				},
 			},
@@ -160,7 +176,7 @@ func CommandMessageHandler(ctx context.Context, bot *ubot.Bot, message axon.O) (
 			status.PauseTracking(bot)
 		case "Resume":
 			status.ResumeTracking(bot)
-		case "Stop":
+		case "End":
 			status.EndTracking(bot)
 		case "Get GPX":
 			status.SendGPX(bot)
@@ -175,10 +191,19 @@ func CommandMessageHandler(ctx context.Context, bot *ubot.Bot, message axon.O) (
 }
 
 func CallbackQueryHandler(ctx context.Context, bot *ubot.Bot, message axon.O) (done bool, err error) {
-	log.Println("callback query")
-	chatId, _ := message.GetInteger("chat.id")
+	chatId, _ := message.GetInteger("message.chat.id")
 	data, _ := message.GetString("data")
 	status := findOrCreateStatus(bot, chatId)
-	status.Callback(bot, data)
+	result := status.Callback(bot, data)
+
+	if callbackQueryId, err := message.GetString("id"); err == nil {
+		cbBody := axon.O{
+			"callback_query_id": callbackQueryId,
+		}
+		if result != "" {
+			cbBody["text"] = result
+		}
+		bot.AnswerCallbackQuery(cbBody)
+	}
 	return
 }

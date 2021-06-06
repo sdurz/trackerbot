@@ -14,6 +14,7 @@ type ChatStatus struct {
 	vehicle       string
 	state         State
 	statusMessage axon.O
+	pinnedMessage axon.O
 }
 
 func NewChatStatus(bot *ubot.Bot, chatId int64) (result *ChatStatus) {
@@ -69,18 +70,28 @@ func (status *ChatStatus) SetState(bot *ubot.Bot, state State) (err error) {
 	return
 }
 
-func (status *ChatStatus) Callback(bot *ubot.Bot, data string) {
+func (status *ChatStatus) Callback(bot *ubot.Bot, data string) (result string) {
+	result = ""
 	switch data {
 	case "pause tracking":
 		status.state.PauseTracking(bot)
-	case "stop tracking":
-		status.state.EndTracking(bot)
+		result = "Tracking paused"
 	case "resume tracking":
 		status.state.ResumeTracking(bot)
+		result = "Tracking resumed"
+	case "end tracking":
+		status.state.EndTracking(bot)
+		result = "Tracking ended"
 	case "set bike":
 		status.vehicle = "bike"
+		result = "Bike profile set"
 	case "set hike":
 		status.vehicle = "hike"
+		result = "Hike profile set"
+	case "set car":
+		status.vehicle = "car"
+		result = "Car profile set"
 	default:
 	}
+	return
 }

@@ -17,7 +17,11 @@ type StateRunning struct {
 }
 
 func (state *StateRunning) EnterState(bot *ubot.Bot, chatId int64) (err error) {
-	if message, err := bot.SendMessage(axon.O{
+	bot.UnpinAllChatMessages(axon.O{
+		"chat_id": state.parent.chatId,
+	})
+
+	_, err = bot.SendMessage(axon.O{
 		"chat_id":    state.parent.chatId,
 		"text":       "Tracking **started** at " + time.Now().Format("15:04:05"),
 		"parse_mode": "MarkdownV2",
@@ -25,7 +29,7 @@ func (state *StateRunning) EnterState(bot *ubot.Bot, chatId int64) (err error) {
 			"keyboard": axon.A{
 				axon.A{
 					axon.O{
-						"text": "Stop",
+						"text": "End",
 					},
 				},
 				axon.A{
@@ -36,8 +40,18 @@ func (state *StateRunning) EnterState(bot *ubot.Bot, chatId int64) (err error) {
 			},
 			"resize_keyboard": true,
 		},
+	})
+
+	if pinnedMessage, err := bot.SendMessage(axon.O{
+		"chat_id": state.parent.chatId,
+		"text":    "State: **started**, Pace: --:--",
 	}); err == nil {
-		state.parent.statusMessage = message
+		messageId, _ := pinnedMessage.GetInteger("message_id")
+		bot.PinChatMessage(axon.O{
+			"chat_id":    state.parent.chatId,
+			"message_id": messageId,
+		})
+		state.parent.pinnedMessage = pinnedMessage
 	}
 	return
 }
@@ -76,10 +90,12 @@ func (state *StateRunning) UpdateTracking(bot *ubot.Bot, position *Position) (er
 	}
 	state.positions = append(state.positions, position)
 
-	chatId, _ := state.parent.statusMessage.GetInteger("chat.id")
-	bot.SendMessage(axon.O{
-		"chat_id": chatId,
-		"text":    fmt.Sprintf("Current pace: **%s**\nUpdated: %s", state.GetCurrentPace(), time.Now().Format("15:04:05")),
+	currentPace := state.GetCurrentPace()
+	pinnedId, _ := state.parent.pinnedMessage.GetInteger("message_id")
+	bot.EditMessageText(axon.O{
+		"chat_id":    state.parent.chatId,
+		"message_id": pinnedId,
+		"text":       fmt.Sprintf("State: **tracking**, Pace: %s", currentPace),
 	})
 	return
 }

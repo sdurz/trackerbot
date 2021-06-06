@@ -1,0 +1,8 @@
+getgpx - get current gpx tracj
+pause - pause tracking
+resume - resume tracking
+end - end tracking 
+setprofile - set gpx matching profile
+start - start this bot
+stop - stop this bot
+help - get help

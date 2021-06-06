@@ -8,7 +8,7 @@ import (
 	"os/signal"
 	"sync"
 
-	"github.com/golang/groupcache/lru"
+	lru "github.com/hashicorp/golang-lru"
 	"github.com/sdurz/axon"
 	"github.com/sdurz/ubot"
 )
@@ -27,12 +27,15 @@ func init() {
 	flag.StringVar(&apiKey, "apiKey", "", "api key")
 	flag.StringVar(&webhookUrl, "webhookUrl", "", "webhook url")
 	flag.StringVar(&graphHopperUrl, "graphHopperUrl", "http://localhost:8989", "graphhopper url")
-	flag.StringVar(&serverBind, "serverBind", "localhost:9992", "server:port")
+	flag.StringVar(&serverBind, "serverBind", "", "server:port")
 
 	signals = make(chan os.Signal, 1)
 	signal.Notify(signals, os.Interrupt)
 
-	lrucache = lru.New(20000)
+	var err error
+	if lrucache, err = lru.New(20000); err != nil {
+		log.Fatal(err)
+	}
 }
 
 func main() {
@@ -55,8 +58,10 @@ func main() {
 	bot.AddMessageHandler(ubot.MessageHasCommand("pause"), PauseTrackingCommandHandler)
 	bot.AddMessageHandler(ubot.MessageHasCommand("resume"), ResumeTrackingCommandHandler)
 	bot.AddMessageHandler(ubot.MessageHasCommand("end"), EndTrackingCommandHandler)
-	bot.AddMessageHandler(ubot.MessageHasCommand("setprofile"), ResumeTrackingCommandHandler)
+	bot.AddMessageHandler(ubot.MessageHasCommand("setprofile"), SetProfileCommandHandler)
+	bot.AddMessageHandler(ubot.MessageHasCommand("help"), GetHelpCommandHandler)
 	bot.AddMessageHandler(ubot.MessageIsPrivate, CommandMessageHandler)
+	bot.AddCallbackQueryHandler(ubot.Always, CallbackQueryHandler)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	updatesSource := ubot.ServerSource

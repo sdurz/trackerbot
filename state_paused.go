@@ -13,9 +13,17 @@ type StatePaused struct {
 }
 
 func (state *StatePaused) EnterState(bot *ubot.Bot, chatId int64) (err error) {
+	updateTime := time.Now().Format("15:04:05")
+	pinnedId, _ := state.parent.pinnedMessage.GetInteger("message_id")
+	bot.EditMessageText(axon.O{
+		"chat_id":    state.parent.chatId,
+		"message_id": pinnedId,
+		"text":       "State: **paused**, Pace: --:--",
+	})
+
 	_, err = bot.SendMessage(axon.O{
 		"chat_id": state.parent.chatId,
-		"text":    "Tracking paused at " + time.Now().Format("15:04:05"),
+		"text":    "Tracking paused at " + updateTime,
 		"reply_markup": axon.O{
 			"keyboard": axon.A{
 				axon.A{
