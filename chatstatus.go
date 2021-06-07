@@ -22,11 +22,20 @@ func NewChatStatus(bot *ubot.Bot, chatId int64) (result *ChatStatus) {
 		chatId:  chatId,
 		vehicle: "hike",
 	}
-	result.SetState(bot, &StateReady{result})
+	result.SetState(bot, &StateReady{
+		StateBase: StateBase{
+			parent: result,
+		},
+	})
 	return
 }
 
-func (s *ChatStatus) StartTracking(bot *ubot.Bot, position *Position) (err error) {
+func (s *ChatStatus) StartBot(bot *ubot.Bot, message axon.O) (err error) {
+	err = s.state.Start(bot, message)
+	return
+}
+
+func (s *ChatStatus) BeginTracking(bot *ubot.Bot, position *Position) (err error) {
 	err = s.state.BeginTracking(bot, position)
 	return
 }

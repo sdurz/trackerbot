@@ -8,7 +8,7 @@ import (
 )
 
 type StatePaused struct {
-	parent    *ChatStatus
+	StateBase
 	positions []*Position
 }
 
@@ -45,41 +45,25 @@ func (state *StatePaused) BeginTracking(bot *ubot.Bot, position *Position) (err 
 	})
 	err = state.parent.SetState(
 		bot,
-		&StateRunning{
-			parent:    state.parent,
+		&StateTracking{
+			StateBase: StateBase{
+				parent: state.parent,
+			},
 			positions: []*Position{position},
 		},
 	)
 	return
 }
 
-func (state *StatePaused) PauseTracking(bot *ubot.Bot) (err error) {
-	return
-}
-
 func (state *StatePaused) ResumeTracking(bot *ubot.Bot) (err error) {
 	err = state.parent.SetState(bot,
-		&StateRerunning{
-			StateRunning{
-				parent:    state.parent,
+		&StateResumed{
+			StateTracking{
+				StateBase: StateBase{
+					parent: state.parent,
+				},
 				positions: state.positions,
 			},
 		})
-	return
-}
-
-func (state *StatePaused) UpdateTracking(bot *ubot.Bot, position *Position) (err error) {
-	return
-}
-
-func (state *StatePaused) EndTracking(bot *ubot.Bot) (err error) {
-	return
-}
-
-func (state *StatePaused) GetGPX(ubot *ubot.Bot, matchType string) (data []byte, err error) {
-	return makeGpx(state.positions, matchType)
-}
-
-func (state *StatePaused) GetCurrentPace() (result *Pace) {
 	return
 }

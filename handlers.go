@@ -51,7 +51,7 @@ func MessagePositionHandler(ctx context.Context, bot *ubot.Bot, message axon.O) 
 
 	if chatId, position, err = messagePosition(message); err == nil {
 		status := findOrCreateStatus(bot, chatId)
-		status.StartTracking(bot, position)
+		status.BeginTracking(bot, position)
 	}
 	done = true
 	return

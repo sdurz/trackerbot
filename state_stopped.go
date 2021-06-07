@@ -8,7 +8,7 @@ import (
 )
 
 type StateStopped struct {
-	parent        *ChatStatus
+	StateBase
 	positions     []*Position
 	downloadCount int64
 }
@@ -31,31 +31,13 @@ func (state *StateStopped) EnterState(bot *ubot.Bot, chatId int64) (err error) {
 	return
 }
 
-func (state *StateStopped) PauseTracking(bot *ubot.Bot) (err error) {
-	// no op
-	return
-}
-
-func (state *StateStopped) ResumeTracking(bot *ubot.Bot) (err error) {
-	// no op
-	return
-}
-
-func (state *StateStopped) UpdateTracking(bot *ubot.Bot, position *Position) (err error) {
-	// no op
-	return
-}
-
-func (state *StateStopped) EndTracking(bot *ubot.Bot) (err error) {
-	// no op
-	return
-}
-
 func (state *StateStopped) BeginTracking(bot *ubot.Bot, position *Position) (err error) {
 	err = state.parent.SetState(
 		bot,
-		&StateRunning{
-			parent:    state.parent,
+		&StateTracking{
+			StateBase: StateBase{
+				parent: state.parent,
+			},
 			positions: []*Position{position},
 		},
 	)
@@ -82,9 +64,5 @@ func (state *StateStopped) GetGPX(bot *ubot.Bot, matchType string) (reesult []by
 		})
 		err = errors.New("to many downloads")
 	}
-	return
-}
-
-func (state *StateStopped) GetCurrentPace() (result *Pace) {
 	return
 }

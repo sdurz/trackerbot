@@ -16,5 +16,7 @@ github.com/sdurz/ubot v0.0.0-20210530143320-2365d6443844 h1:LGlfOPcK1wPjgVPQYnC+
 github.com/sdurz/ubot v0.0.0-20210530143320-2365d6443844/go.mod h1:xnPMp4Zk/AhaAKACusM8gByey+442RsjI/L8gdB/9KA=
 github.com/sdurz/ubot v0.0.0-20210530150922-c25f40fc5f4c h1:btZbk7yNC8PS07UBZWZcRiGhXXD+1ZzXc4ichnXbEnE=
 github.com/sdurz/ubot v0.0.0-20210530150922-c25f40fc5f4c/go.mod h1:xnPMp4Zk/AhaAKACusM8gByey+442RsjI/L8gdB/9KA=
+github.com/sdurz/ubot v0.0.0-20210607072836-98fff85d0172 h1:cpjr120KCkSN946W0ChUXXeTFAx1a+/ZryJ2CwzIbpw=
+github.com/sdurz/ubot v0.0.0-20210607072836-98fff85d0172/go.mod h1:xnPMp4Zk/AhaAKACusM8gByey+442RsjI/L8gdB/9KA=
 github.com/umahmood/haversine v0.0.0-20151105152445-808ab04add26 h1:UFHFmFfixpmfRBcxuu+LA9l8MdURWVdVNUHxO5n1d2w=
 github.com/umahmood/haversine v0.0.0-20151105152445-808ab04add26/go.mod h1:IGhd0qMDsUa9acVjsbsT7bu3ktadtGOHI79+idTew/M=
