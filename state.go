@@ -6,7 +6,7 @@ import (
 )
 
 type State interface {
-	EnterState(bot *ubot.Bot, chatId int64) (err error)
+	EnterState(bot *ubot.Bot, message axon.O) (err error)
 	BeginTracking(bot *ubot.Bot, position *Position) (err error)
 	Start(bot *ubot.Bot, message axon.O) (err error)
 	PauseTracking(bot *ubot.Bot) (err error)

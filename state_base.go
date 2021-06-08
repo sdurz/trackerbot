@@ -1,8 +1,6 @@
 package main
 
 import (
-	"log"
-
 	"github.com/sdurz/axon"
 	"github.com/sdurz/ubot"
 )
@@ -13,11 +11,6 @@ type StateBase struct {
 
 func (state *StateBase) Start(bot *ubot.Bot, message axon.O) (err error) {
 	// no op
-	return
-}
-
-func (state *StateBase) EnterState(bot *ubot.Bot, chatId int64) (err error) {
-	log.Fatalln("StateBase used as concrete")
 	return
 }
 

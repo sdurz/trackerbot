@@ -16,11 +16,10 @@ type StateTracking struct {
 	positions []*Position
 }
 
-func (state *StateTracking) EnterState(bot *ubot.Bot, chatId int64) (err error) {
+func (state *StateTracking) EnterState(bot *ubot.Bot, message axon.O) (err error) {
 	bot.UnpinAllChatMessages(axon.O{
 		"chat_id": state.parent.chatId,
 	})
-
 	_, err = bot.SendMessage(axon.O{
 		"chat_id":    state.parent.chatId,
 		"text":       "Tracking **started** at " + time.Now().Format("15:04:05"),
@@ -69,7 +68,7 @@ func (state *StateTracking) BeginTracking(bot *ubot.Bot, position *Position) (er
 			},
 			positions: []*Position{position},
 		},
-	)
+		nil)
 	return
 }
 
@@ -79,7 +78,9 @@ func (state *StateTracking) PauseTracking(bot *ubot.Bot) (err error) {
 			parent: state.parent,
 		},
 		positions: state.positions,
-	})
+	},
+		nil,
+	)
 	return
 }
 
@@ -110,7 +111,8 @@ func (state *StateTracking) EndTracking(bot *ubot.Bot) (err error) {
 			parent: state.parent,
 		},
 		positions: state.positions,
-	})
+	},
+		nil)
 	return
 }
 

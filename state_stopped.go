@@ -13,12 +13,12 @@ type StateStopped struct {
 	downloadCount int64
 }
 
-func (state *StateStopped) EnterState(bot *ubot.Bot, chatId int64) (err error) {
+func (state *StateStopped) EnterState(bot *ubot.Bot, message axon.O) (err error) {
 	pinnedId, _ := state.parent.pinnedMessage.GetInteger("message_id")
 	bot.EditMessageText(axon.O{
 		"chat_id":    state.parent.chatId,
 		"message_id": pinnedId,
-		"text":       "State: **ended**, Pace: --:--",
+		"text":       "State: **ended**",
 	})
 	_, err = bot.SendMessage(axon.O{
 		"chat_id": state.parent.chatId,
@@ -40,6 +40,7 @@ func (state *StateStopped) BeginTracking(bot *ubot.Bot, position *Position) (err
 			},
 			positions: []*Position{position},
 		},
+		nil,
 	)
 	return
 }

@@ -92,7 +92,8 @@ func GetHelpCommandHandler(ctx context.Context, bot *ubot.Bot, message axon.O) (
 
 func StartCommandHandler(ctx context.Context, bot *ubot.Bot, message axon.O) (done bool, err error) {
 	chatId, _ := message.GetInteger("chat.id")
-	findOrCreateStatus(bot, chatId)
+	status := findOrCreateStatus(bot, chatId)
+	status.StartBot(bot, message)
 	done = true
 	return
 }

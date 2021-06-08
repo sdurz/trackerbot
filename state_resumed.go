@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/sdurz/axon"
@@ -12,13 +11,12 @@ type StateResumed struct {
 	StateTracking
 }
 
-func (state *StateResumed) EnterState(bot *ubot.Bot, chatId int64) (err error) {
-	currentPace := state.GetCurrentPace()
+func (state *StateResumed) EnterState(bot *ubot.Bot, message axon.O) (err error) {
 	pinnedId, _ := state.parent.pinnedMessage.GetInteger("message_id")
 	bot.EditMessageText(axon.O{
 		"chat_id":    state.parent.chatId,
 		"message_id": pinnedId,
-		"text":       fmt.Sprintf("State: **tracking**, Pace: %s", currentPace),
+		"text":       "State: **tracking**",
 		"parse_mode": "MarkdownV2",
 	})
 	if message, err := bot.SendMessage(axon.O{

@@ -26,7 +26,8 @@ func NewChatStatus(bot *ubot.Bot, chatId int64) (result *ChatStatus) {
 		StateBase: StateBase{
 			parent: result,
 		},
-	})
+	},
+		nil)
 	return
 }
 
@@ -53,7 +54,7 @@ func (s *ChatStatus) EndTracking(bot *ubot.Bot) {
 	s.state.EndTracking(bot)
 }
 
-func (s *ChatStatus) Append(bot *ubot.Bot, position *Position) {
+func (s *ChatStatus) UpdatePosition(bot *ubot.Bot, position *Position) {
 	s.state.UpdateTracking(bot, position)
 }
 
@@ -69,8 +70,8 @@ func (s *ChatStatus) SendGPX(bot *ubot.Bot) (result []byte, err error) {
 	return
 }
 
-func (status *ChatStatus) SetState(bot *ubot.Bot, state State) (err error) {
-	if err := state.EnterState(bot, status.chatId); err == nil {
+func (status *ChatStatus) SetState(bot *ubot.Bot, state State, maessage axon.O) (err error) {
+	if err := state.EnterState(bot, nil); err == nil {
 		status.state = state
 	} else {
 		log.Println("Error in EnterState: " + err.Error())

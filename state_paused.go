@@ -12,7 +12,7 @@ type StatePaused struct {
 	positions []*Position
 }
 
-func (state *StatePaused) EnterState(bot *ubot.Bot, chatId int64) (err error) {
+func (state *StatePaused) EnterState(bot *ubot.Bot, message axon.O) (err error) {
 	updateTime := time.Now().Format("15:04:05")
 	pinnedId, _ := state.parent.pinnedMessage.GetInteger("message_id")
 	bot.EditMessageText(axon.O{
@@ -49,8 +49,8 @@ func (state *StatePaused) BeginTracking(bot *ubot.Bot, position *Position) (err 
 			StateBase: StateBase{
 				parent: state.parent,
 			},
-			positions: []*Position{position},
 		},
+		nil,
 	)
 	return
 }
@@ -64,6 +64,6 @@ func (state *StatePaused) ResumeTracking(bot *ubot.Bot) (err error) {
 				},
 				positions: state.positions,
 			},
-		})
+		}, nil)
 	return
 }

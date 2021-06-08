@@ -6,19 +6,18 @@ import (
 )
 
 type StateStarted struct {
+	StateBase
 	parent *ChatStatus
 }
 
-func (state *StateStarted) EnterState(bot *ubot.Bot, chatId int64) (err error) {
-	if _, err := bot.SendMessage(axon.O{
-		"chat_id": chatId,
+func (state *StateStarted) EnterState(bot *ubot.Bot, message axon.O) (err error) {
+	bot.SendMessage(axon.O{
+		"chat_id": state.parent.chatId,
 		"text":    "Hello! Share your position to start tracking",
 		"reply_markup": axon.O{
 			"remove_keyboard": true,
 		},
-	}); err == nil {
-		state.parent.chatId = chatId
-	}
+	})
 	return
 }
 
@@ -31,6 +30,7 @@ func (state *StateStarted) BeginTracking(bot *ubot.Bot, position *Position) (err
 			},
 			positions: []*Position{position},
 		},
+		nil,
 	)
 	return
 }
