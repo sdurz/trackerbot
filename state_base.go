@@ -6,7 +6,7 @@ import (
 )
 
 type StateBase struct {
-	parent *ChatStatus
+	parent *Chat
 }
 
 func (state *StateBase) Start(bot *ubot.Bot, message axon.O) (err error) {

@@ -33,9 +33,9 @@ func messagePosition(message axon.O) (chatId int64, result *Position, err error)
 	return
 }
 
-func findOrCreateStatus(bot *ubot.Bot, chatId int64) (result *ChatStatus) {
+func findOrCreateStatus(bot *ubot.Bot, chatId int64) (result *Chat) {
 	if statusI, ok := lrucache.Get(chatId); ok {
-		result = statusI.(*ChatStatus)
+		result = statusI.(*Chat)
 	} else {
 		result = NewChatStatus(bot, chatId)
 		lrucache.Add(chatId, result)
@@ -169,7 +169,7 @@ func EndTrackingCommandHandler(ctx context.Context, bot *ubot.Bot, message axon.
 func CommandMessageHandler(ctx context.Context, bot *ubot.Bot, message axon.O) (done bool, err error) {
 	chatId, _ := message.GetInteger("chat.id")
 	if cached, ok := lrucache.Get(chatId); ok {
-		status := cached.(*ChatStatus)
+		status := cached.(*Chat)
 		text, _ := message.GetString("text")
 		messageId, _ := message.GetInteger("message_id")
 		switch text {

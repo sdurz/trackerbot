@@ -9,7 +9,7 @@ import (
 	"github.com/sdurz/ubot"
 )
 
-type ChatStatus struct {
+type Chat struct {
 	chatId        int64
 	vehicle       string
 	state         State
@@ -17,8 +17,8 @@ type ChatStatus struct {
 	pinnedMessage axon.O
 }
 
-func NewChatStatus(bot *ubot.Bot, chatId int64) (result *ChatStatus) {
-	result = &ChatStatus{
+func NewChatStatus(bot *ubot.Bot, chatId int64) (result *Chat) {
+	result = &Chat{
 		chatId:  chatId,
 		vehicle: "hike",
 	}
@@ -31,34 +31,34 @@ func NewChatStatus(bot *ubot.Bot, chatId int64) (result *ChatStatus) {
 	return
 }
 
-func (s *ChatStatus) StartBot(bot *ubot.Bot, message axon.O) (err error) {
+func (s *Chat) StartBot(bot *ubot.Bot, message axon.O) (err error) {
 	err = s.state.Start(bot, message)
 	return
 }
 
-func (s *ChatStatus) BeginTracking(bot *ubot.Bot, position *Position) (err error) {
+func (s *Chat) BeginTracking(bot *ubot.Bot, position *Position) (err error) {
 	err = s.state.BeginTracking(bot, position)
 	return
 }
 
-func (s *ChatStatus) PauseTracking(bot *ubot.Bot) (err error) {
+func (s *Chat) PauseTracking(bot *ubot.Bot) (err error) {
 	err = s.state.PauseTracking(bot)
 	return
 }
 
-func (s *ChatStatus) ResumeTracking(bot *ubot.Bot) {
+func (s *Chat) ResumeTracking(bot *ubot.Bot) {
 	s.state.ResumeTracking(bot)
 }
 
-func (s *ChatStatus) EndTracking(bot *ubot.Bot) {
+func (s *Chat) EndTracking(bot *ubot.Bot) {
 	s.state.EndTracking(bot)
 }
 
-func (s *ChatStatus) UpdatePosition(bot *ubot.Bot, position *Position) {
+func (s *Chat) UpdatePosition(bot *ubot.Bot, position *Position) {
 	s.state.UpdateTracking(bot, position)
 }
 
-func (s *ChatStatus) SendGPX(bot *ubot.Bot) (result []byte, err error) {
+func (s *Chat) SendGPX(bot *ubot.Bot) (result []byte, err error) {
 	if byteData, err := s.state.GetGPX(bot, s.vehicle); err == nil {
 		fileName := fmt.Sprintf("TelegramTrack-%v.gpx", time.Now().Format("20060102-150405"))
 		uploadFile, _ := ubot.NewBytesUploadFile(fileName, byteData)
@@ -70,17 +70,16 @@ func (s *ChatStatus) SendGPX(bot *ubot.Bot) (result []byte, err error) {
 	return
 }
 
-func (status *ChatStatus) SetState(bot *ubot.Bot, state State, maessage axon.O) (err error) {
+func (status *Chat) SetState(bot *ubot.Bot, state State, maessage axon.O) (err error) {
 	if err := state.EnterState(bot, nil); err == nil {
 		status.state = state
 	} else {
 		log.Println("Error in EnterState: " + err.Error())
-		log.Println("state not changed")
 	}
 	return
 }
 
-func (status *ChatStatus) Callback(bot *ubot.Bot, data string) (result string) {
+func (status *Chat) Callback(bot *ubot.Bot, data string) (result string) {
 	result = ""
 	switch data {
 	case "pause tracking":

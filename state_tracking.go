@@ -63,9 +63,7 @@ func (state *StateTracking) BeginTracking(bot *ubot.Bot, position *Position) (er
 	err = state.parent.SetState(
 		bot,
 		&StateTracking{
-			StateBase: StateBase{
-				parent: state.parent,
-			},
+			StateBase: state.StateBase,
 			positions: []*Position{position},
 		},
 		nil)
@@ -74,9 +72,7 @@ func (state *StateTracking) BeginTracking(bot *ubot.Bot, position *Position) (er
 
 func (state *StateTracking) PauseTracking(bot *ubot.Bot) (err error) {
 	state.parent.SetState(bot, &StatePaused{
-		StateBase: StateBase{
-			parent: state.parent,
-		},
+		StateBase: state.StateBase,
 		positions: state.positions,
 	},
 		nil,

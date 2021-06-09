@@ -7,7 +7,6 @@ import (
 
 type StateStarted struct {
 	StateBase
-	parent *ChatStatus
 }
 
 func (state *StateStarted) EnterState(bot *ubot.Bot, message axon.O) (err error) {
@@ -25,9 +24,7 @@ func (state *StateStarted) BeginTracking(bot *ubot.Bot, position *Position) (err
 	err = state.parent.SetState(
 		bot,
 		&StateTracking{
-			StateBase: StateBase{
-				parent: state.parent,
-			},
+			StateBase: state.StateBase,
 			positions: []*Position{position},
 		},
 		nil,

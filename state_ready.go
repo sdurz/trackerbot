@@ -15,18 +15,14 @@ func (state *StateReady) EnterState(bot *ubot.Bot, message axon.O) (err error) {
 
 func (state *StateReady) Start(bot *ubot.Bot, message axon.O) (err error) {
 	err = state.parent.SetState(bot, &StateStarted{
-		StateBase: StateBase{
-			parent: state.parent,
-		},
+		StateBase: state.StateBase,
 	}, message)
 	return
 }
 
 func (state *StateReady) BeginTracking(bot *ubot.Bot, position *Position) (err error) {
 	state.parent.SetState(bot, &StateTracking{
-		StateBase: StateBase{
-			parent: state.parent,
-		},
+		StateBase: state.StateBase,
 	},
 		nil)
 	return
