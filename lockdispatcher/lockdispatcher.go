@@ -50,20 +50,20 @@ func (d *LockDispatcher) run() {
 	for {
 		select {
 		case requested := <-d.requests:
-			if pendingList, ok := d.resources[requested.resource]; ok {
-				d.resources[requested.resource] = append(pendingList, &requested)
+			if pendingRequests, ok := d.resources[requested.resource]; ok {
+				d.resources[requested.resource] = append(pendingRequests, &requested)
 			} else {
 				d.resources[requested.resource] = []*dispatchRequest{}
 				requested.waitChan <- 0
 			}
 		case returned := <-d.returns:
-			if pendingList, ok := d.resources[returned]; ok {
-				if len(pendingList) == 0 {
+			if pendingRequests, ok := d.resources[returned]; ok {
+				if len(pendingRequests) == 0 {
 					delete(d.resources, returned)
 				} else {
-					first := pendingList[0]
-					d.resources[returned] = pendingList[1:]
-					first.waitChan <- 0
+					nextExecution := pendingRequests[0]
+					d.resources[returned] = pendingRequests[1:]
+					nextExecution.waitChan <- 0
 				}
 			} else {
 				panic("never acquired resource returned")
@@ -74,7 +74,7 @@ func (d *LockDispatcher) run() {
 	}
 }
 
-func (d *LockDispatcher) Aax(resource interface{}, callback ResourceCallback) (err error) {
+func (d *LockDispatcher) AcquireAndExecute(resource interface{}, callback ResourceCallback) (err error) {
 	request := newDispatchRequest(resource, d.returns)
 	d.requests <- request
 

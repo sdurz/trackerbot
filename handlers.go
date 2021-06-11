@@ -30,16 +30,17 @@ func messagePosition(message axon.O) (result *Position, err error) {
 	return
 }
 
-func withChatIdDo(bot *ubot.Bot, idPath string, message axon.O, dispatchedFunc func(*Chat) error) (err error) {
-	if chatId, err := message.GetInteger(idPath); err == nil {
-		var chat *Chat
-		if statusI, ok := lrucache.Get(chatId); ok {
-			chat = statusI.(*Chat)
-		} else {
-			chat = NewChatStatus(bot, chatId)
-			lrucache.Add(chatId, chat)
-		}
-		err = dispatcher.Aax(chatId, func() error {
+func doWhileLockingChatId(bot *ubot.Bot, chatIdPropertyPath string, message axon.O, dispatchedFunc func(*Chat) error) (err error) {
+	if chatId, err := message.GetInteger(chatIdPropertyPath); err == nil {
+		err = dispatcher.AcquireAndExecute(chatId, func() error {
+			var chat *Chat
+			if statusI, ok := lrucache.Get(chatId); ok {
+				chat = statusI.(*Chat)
+			} else {
+				chat = NewChatStatus(bot, chatId)
+				lrucache.Add(chatId, chat)
+			}
+
 			return dispatchedFunc(chat)
 		})
 	}
@@ -47,7 +48,7 @@ func withChatIdDo(bot *ubot.Bot, idPath string, message axon.O, dispatchedFunc f
 }
 
 func MessagePositionHandler(ctx context.Context, bot *ubot.Bot, message axon.O) (done bool, err error) {
-	err = withChatIdDo(bot, "chat.id", message, func(chat *Chat) (err error) {
+	err = doWhileLockingChatId(bot, "chat.id", message, func(chat *Chat) (err error) {
 		if position, err := messagePosition(message); err == nil {
 			chat.BeginTracking(bot, position)
 		}
@@ -58,7 +59,7 @@ func MessagePositionHandler(ctx context.Context, bot *ubot.Bot, message axon.O) 
 }
 
 func MessagePositionUpdateHandler(ctx context.Context, bot *ubot.Bot, message axon.O) (done bool, err error) {
-	err = withChatIdDo(bot, "chat.id", message, func(chat *Chat) (err error) {
+	err = doWhileLockingChatId(bot, "chat.id", message, func(chat *Chat) (err error) {
 		if position, err := messagePosition(message); err == nil {
 			chat.state.UpdateTracking(bot, position)
 		}
@@ -68,7 +69,7 @@ func MessagePositionUpdateHandler(ctx context.Context, bot *ubot.Bot, message ax
 }
 
 func GetGpxCommandHandler(ctx context.Context, bot *ubot.Bot, message axon.O) (done bool, err error) {
-	err = withChatIdDo(bot, "chat.id", message, func(chat *Chat) (err error) {
+	err = doWhileLockingChatId(bot, "chat.id", message, func(chat *Chat) (err error) {
 		chat.SendGPX(bot)
 		done = true
 		return
@@ -77,7 +78,7 @@ func GetGpxCommandHandler(ctx context.Context, bot *ubot.Bot, message axon.O) (d
 }
 
 func GetHelpCommandHandler(ctx context.Context, bot *ubot.Bot, message axon.O) (done bool, err error) {
-	err = withChatIdDo(bot, "chat.id", message, func(chat *Chat) (err error) {
+	err = doWhileLockingChatId(bot, "chat.id", message, func(chat *Chat) (err error) {
 		bot.SendMessage(axon.O{
 			"chat_id":    chat.chatId,
 			"text":       helpMarkup,
@@ -90,7 +91,7 @@ func GetHelpCommandHandler(ctx context.Context, bot *ubot.Bot, message axon.O) (
 }
 
 func StartCommandHandler(ctx context.Context, bot *ubot.Bot, message axon.O) (done bool, err error) {
-	err = withChatIdDo(bot, "chat.id", message, func(chat *Chat) (err error) {
+	err = doWhileLockingChatId(bot, "chat.id", message, func(chat *Chat) (err error) {
 		err = chat.StartBot(bot, message)
 		done = true
 		return
@@ -99,7 +100,7 @@ func StartCommandHandler(ctx context.Context, bot *ubot.Bot, message axon.O) (do
 }
 
 func StopCommandHandler(ctx context.Context, bot *ubot.Bot, message axon.O) (done bool, err error) {
-	err = withChatIdDo(bot, "chat.id", message, func(chat *Chat) (err error) {
+	err = doWhileLockingChatId(bot, "chat.id", message, func(chat *Chat) (err error) {
 		_, err = bot.SendMessage(axon.O{
 			"chat_id": chat.chatId,
 			"text":    "Goodbye!",
@@ -112,7 +113,7 @@ func StopCommandHandler(ctx context.Context, bot *ubot.Bot, message axon.O) (don
 }
 
 func SetProfileMessageHandler(ctx context.Context, bot *ubot.Bot, message axon.O) (done bool, err error) {
-	err = withChatIdDo(bot, "chat.id", message, func(chat *Chat) (err error) {
+	err = doWhileLockingChatId(bot, "chat.id", message, func(chat *Chat) (err error) {
 		bot.SendMessage(axon.O{
 			"chat_id": chat.chatId,
 			"text":    "Choose your vehicle",
@@ -146,7 +147,7 @@ func SetProfileMessageHandler(ctx context.Context, bot *ubot.Bot, message axon.O
 }
 
 func PauseTrackingCommandHandler(ctx context.Context, bot *ubot.Bot, message axon.O) (done bool, err error) {
-	err = withChatIdDo(bot, "chat.id", message, func(chat *Chat) (err error) {
+	err = doWhileLockingChatId(bot, "chat.id", message, func(chat *Chat) (err error) {
 		err = chat.PauseTracking(bot)
 		done = true
 		return
@@ -155,7 +156,7 @@ func PauseTrackingCommandHandler(ctx context.Context, bot *ubot.Bot, message axo
 }
 
 func ResumeTrackingCommandHandler(ctx context.Context, bot *ubot.Bot, message axon.O) (done bool, err error) {
-	err = withChatIdDo(bot, "chat.id", message, func(chat *Chat) (err error) {
+	err = doWhileLockingChatId(bot, "chat.id", message, func(chat *Chat) (err error) {
 		chat.ResumeTracking(bot)
 		done = true
 		return
@@ -164,7 +165,7 @@ func ResumeTrackingCommandHandler(ctx context.Context, bot *ubot.Bot, message ax
 }
 
 func EndTrackingCommandHandler(ctx context.Context, bot *ubot.Bot, message axon.O) (done bool, err error) {
-	err = withChatIdDo(bot, "chat.id", message, func(chat *Chat) (err error) {
+	err = doWhileLockingChatId(bot, "chat.id", message, func(chat *Chat) (err error) {
 		chat.EndTracking(bot)
 		done = true
 		return
@@ -173,7 +174,7 @@ func EndTrackingCommandHandler(ctx context.Context, bot *ubot.Bot, message axon.
 }
 
 func CommandMessageHandler(ctx context.Context, bot *ubot.Bot, message axon.O) (done bool, err error) {
-	err = withChatIdDo(bot, "chat.id", message, func(chat *Chat) (err error) {
+	err = doWhileLockingChatId(bot, "chat.id", message, func(chat *Chat) (err error) {
 		text, _ := message.GetString("text")
 		messageId, _ := message.GetInteger("message_id")
 		switch text {
@@ -197,10 +198,9 @@ func CommandMessageHandler(ctx context.Context, bot *ubot.Bot, message axon.O) (
 }
 
 func CallbackQueryHandler(ctx context.Context, bot *ubot.Bot, message axon.O) (done bool, err error) {
-	err = withChatIdDo(bot, "message.chat.id", message, func(chat *Chat) error {
+	err = doWhileLockingChatId(bot, "message.chat.id", message, func(chat *Chat) error {
 		data, _ := message.GetString("data")
 		result := chat.Callback(bot, data)
-
 		if callbackQueryId, err := message.GetString("id"); err == nil {
 			cbBody := axon.O{
 				"callback_query_id": callbackQueryId,
