@@ -8,15 +8,12 @@ import (
 	"github.com/sdurz/ubot"
 )
 
-func messagePosition(message axon.O) (chatId int64, result *Position, err error) {
+func messagePosition(message axon.O) (result *Position, err error) {
 	var (
 		location axon.O
 		date     int64
 	)
 
-	if chatId, err = message.GetInteger("chat.id"); err != nil {
-		return
-	}
 	if location, err = message.GetObject("location"); err != nil {
 		return
 	}
@@ -33,178 +30,187 @@ func messagePosition(message axon.O) (chatId int64, result *Position, err error)
 	return
 }
 
-func findOrCreateStatus(bot *ubot.Bot, chatId int64) (result *Chat) {
-	if statusI, ok := lrucache.Get(chatId); ok {
-		result = statusI.(*Chat)
-	} else {
-		result = NewChatStatus(bot, chatId)
-		lrucache.Add(chatId, result)
+func withChatIdDo(bot *ubot.Bot, idPath string, message axon.O, dispatchedFunc func(*Chat) error) (err error) {
+	if chatId, err := message.GetInteger(idPath); err == nil {
+		var chat *Chat
+		if statusI, ok := lrucache.Get(chatId); ok {
+			chat = statusI.(*Chat)
+		} else {
+			chat = NewChatStatus(bot, chatId)
+			lrucache.Add(chatId, chat)
+		}
+		err = dispatcher.Aax(chatId, func() error {
+			return dispatchedFunc(chat)
+		})
 	}
 	return
 }
 
 func MessagePositionHandler(ctx context.Context, bot *ubot.Bot, message axon.O) (done bool, err error) {
-	var (
-		chatId   int64
-		position *Position
-	)
-
-	if chatId, position, err = messagePosition(message); err == nil {
-		status := findOrCreateStatus(bot, chatId)
-		status.BeginTracking(bot, position)
-	}
-	done = true
+	err = withChatIdDo(bot, "chat.id", message, func(chat *Chat) (err error) {
+		if position, err := messagePosition(message); err == nil {
+			chat.BeginTracking(bot, position)
+		}
+		done = true
+		return
+	})
 	return
 }
 
 func MessagePositionUpdateHandler(ctx context.Context, bot *ubot.Bot, message axon.O) (done bool, err error) {
-	var (
-		chatId   int64
-		position *Position
-	)
-
-	if chatId, position, err = messagePosition(message); err == nil {
-		status := findOrCreateStatus(bot, chatId)
-		status.state.UpdateTracking(bot, position)
-	}
-	done = true
+	err = withChatIdDo(bot, "chat.id", message, func(chat *Chat) (err error) {
+		if position, err := messagePosition(message); err == nil {
+			chat.state.UpdateTracking(bot, position)
+		}
+		return
+	})
 	return
 }
 
 func GetGpxCommandHandler(ctx context.Context, bot *ubot.Bot, message axon.O) (done bool, err error) {
-	chatId, _ := message.GetInteger("chat.id")
-	status := findOrCreateStatus(bot, chatId)
-	status.SendGPX(bot)
-	done = true
+	err = withChatIdDo(bot, "chat.id", message, func(chat *Chat) (err error) {
+		chat.SendGPX(bot)
+		done = true
+		return
+	})
 	return
 }
 
 func GetHelpCommandHandler(ctx context.Context, bot *ubot.Bot, message axon.O) (done bool, err error) {
-	chatId, _ := message.GetInteger("chat.id")
-	bot.SendMessage(axon.O{
-		"chat_id":    chatId,
-		"text":       helpMarkup,
-		"parse_mode": "MarkdownV2",
+	err = withChatIdDo(bot, "chat.id", message, func(chat *Chat) (err error) {
+		bot.SendMessage(axon.O{
+			"chat_id":    chat.chatId,
+			"text":       helpMarkup,
+			"parse_mode": "MarkdownV2",
+		})
+		done = true
+		return
 	})
-	done = true
 	return
 }
 
 func StartCommandHandler(ctx context.Context, bot *ubot.Bot, message axon.O) (done bool, err error) {
-	chatId, _ := message.GetInteger("chat.id")
-	status := findOrCreateStatus(bot, chatId)
-	status.StartBot(bot, message)
-	done = true
+	err = withChatIdDo(bot, "chat.id", message, func(chat *Chat) (err error) {
+		err = chat.StartBot(bot, message)
+		done = true
+		return
+	})
 	return
 }
 
 func StopCommandHandler(ctx context.Context, bot *ubot.Bot, message axon.O) (done bool, err error) {
-	chatId, _ := message.GetInteger("chat.id")
-	bot.SendMessage(axon.O{
-		"chat_id": chatId,
-		"text":    "Goodbye!",
+	err = withChatIdDo(bot, "chat.id", message, func(chat *Chat) (err error) {
+		_, err = bot.SendMessage(axon.O{
+			"chat_id": chat.chatId,
+			"text":    "Goodbye!",
+		})
+		lrucache.Remove(chat.chatId)
+		done = true
+		return
 	})
-	lrucache.Remove(chatId)
-	done = true
 	return
 }
 
-func SetProfileCommandHandler(ctx context.Context, bot *ubot.Bot, message axon.O) (done bool, err error) {
-	chatId, _ := message.GetInteger("chat.id")
-	bot.SendMessage(axon.O{
-		"chat_id": chatId,
-		"text":    "Choose your vehicle",
-		"reply_markup": axon.O{
-			"inline_keyboard": axon.A{
-				axon.A{
-					axon.O{
-						"text":          "🚶🏽 Hike",
-						"callback_data": "set hike",
+func SetProfileMessageHandler(ctx context.Context, bot *ubot.Bot, message axon.O) (done bool, err error) {
+	err = withChatIdDo(bot, "chat.id", message, func(chat *Chat) (err error) {
+		bot.SendMessage(axon.O{
+			"chat_id": chat.chatId,
+			"text":    "Choose your vehicle",
+			"reply_markup": axon.O{
+				"inline_keyboard": axon.A{
+					axon.A{
+						axon.O{
+							"text":          "🚶🏽 Hike",
+							"callback_data": "set hike",
+						},
 					},
-				},
-				axon.A{
-					axon.O{
-						"text":          "🚴 Bike",
-						"callback_data": "set bike",
+					axon.A{
+						axon.O{
+							"text":          "🚴 Bike",
+							"callback_data": "set bike",
+						},
 					},
-				},
-				axon.A{
-					axon.O{
-						"text":          "🚗 Car",
-						"callback_data": "set car",
+					axon.A{
+						axon.O{
+							"text":          "🚗 Car",
+							"callback_data": "set car",
+						},
 					},
 				},
 			},
-		},
+		})
+		done = true
+		return
 	})
-	lrucache.Remove(chatId)
-	done = true
 	return
 }
 
 func PauseTrackingCommandHandler(ctx context.Context, bot *ubot.Bot, message axon.O) (done bool, err error) {
-	chatId, _ := message.GetInteger("chat.id")
-	status := findOrCreateStatus(bot, chatId)
-	status.PauseTracking(bot)
-	done = true
+	err = withChatIdDo(bot, "chat.id", message, func(chat *Chat) (err error) {
+		err = chat.PauseTracking(bot)
+		done = true
+		return
+	})
 	return
 }
 
 func ResumeTrackingCommandHandler(ctx context.Context, bot *ubot.Bot, message axon.O) (done bool, err error) {
-	chatId, _ := message.GetInteger("chat.id")
-	status := findOrCreateStatus(bot, chatId)
-	status.ResumeTracking(bot)
-	done = true
+	err = withChatIdDo(bot, "chat.id", message, func(chat *Chat) (err error) {
+		chat.ResumeTracking(bot)
+		done = true
+		return
+	})
 	return
 }
 
 func EndTrackingCommandHandler(ctx context.Context, bot *ubot.Bot, message axon.O) (done bool, err error) {
-	chatId, _ := message.GetInteger("chat.id")
-	status := findOrCreateStatus(bot, chatId)
-	status.EndTracking(bot)
-	done = true
+	err = withChatIdDo(bot, "chat.id", message, func(chat *Chat) (err error) {
+		chat.EndTracking(bot)
+		done = true
+		return
+	})
 	return
 }
 
 func CommandMessageHandler(ctx context.Context, bot *ubot.Bot, message axon.O) (done bool, err error) {
-	chatId, _ := message.GetInteger("chat.id")
-	if cached, ok := lrucache.Get(chatId); ok {
-		status := cached.(*Chat)
+	err = withChatIdDo(bot, "chat.id", message, func(chat *Chat) (err error) {
 		text, _ := message.GetString("text")
 		messageId, _ := message.GetInteger("message_id")
 		switch text {
 		case "Pause":
-			status.PauseTracking(bot)
+			err = chat.PauseTracking(bot)
 		case "Resume":
-			status.ResumeTracking(bot)
+			chat.ResumeTracking(bot)
 		case "End":
-			status.EndTracking(bot)
+			chat.EndTracking(bot)
 		case "Get GPX":
-			status.SendGPX(bot)
+			_, err = chat.SendGPX(bot)
 		}
 		bot.DeleteMessage(axon.O{
-			"chat_id":    chatId,
+			"chat_id":    chat.chatId,
 			"message_id": messageId,
 		})
-	}
-	done = true
+		done = true
+		return
+	})
 	return
 }
 
 func CallbackQueryHandler(ctx context.Context, bot *ubot.Bot, message axon.O) (done bool, err error) {
-	chatId, _ := message.GetInteger("message.chat.id")
-	data, _ := message.GetString("data")
-	status := findOrCreateStatus(bot, chatId)
-	result := status.Callback(bot, data)
+	err = withChatIdDo(bot, "message.chat.id", message, func(chat *Chat) error {
+		data, _ := message.GetString("data")
+		result := chat.Callback(bot, data)
 
-	if callbackQueryId, err := message.GetString("id"); err == nil {
-		cbBody := axon.O{
-			"callback_query_id": callbackQueryId,
+		if callbackQueryId, err := message.GetString("id"); err == nil {
+			cbBody := axon.O{
+				"callback_query_id": callbackQueryId,
+			}
+			if result != "" {
+				cbBody["text"] = result
+			}
+			bot.AnswerCallbackQuery(cbBody)
 		}
-		if result != "" {
-			cbBody["text"] = result
-		}
-		bot.AnswerCallbackQuery(cbBody)
-	}
+		return nil
+	})
 	return
 }

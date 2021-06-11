@@ -22,7 +22,7 @@ func (state *StateTracking) EnterState(bot *ubot.Bot, message axon.O) (err error
 	})
 	_, err = bot.SendMessage(axon.O{
 		"chat_id":    state.parent.chatId,
-		"text":       "Tracking **started** at " + time.Now().Format("15:04:05"),
+		"text":       "Tracking started at " + time.Now().Format("15:04:05"),
 		"parse_mode": "MarkdownV2",
 		"reply_markup": axon.O{
 			"keyboard": axon.A{
@@ -42,8 +42,9 @@ func (state *StateTracking) EnterState(bot *ubot.Bot, message axon.O) (err error
 	})
 
 	if pinnedMessage, err := bot.SendMessage(axon.O{
-		"chat_id": state.parent.chatId,
-		"text":    "State: **started**, Pace: --:--",
+		"chat_id":    state.parent.chatId,
+		"text":       "State: started",
+		"parse_mode": "MarkdownV2",
 	}); err == nil {
 		messageId, _ := pinnedMessage.GetInteger("message_id")
 		bot.PinChatMessage(axon.O{
@@ -57,8 +58,9 @@ func (state *StateTracking) EnterState(bot *ubot.Bot, message axon.O) (err error
 
 func (state *StateTracking) BeginTracking(bot *ubot.Bot, position *Position) (err error) {
 	bot.SendMessage(axon.O{
-		"chat_id": state.parent.chatId,
-		"text":    "Current tracking aborted, now restarting...",
+		"chat_id":    state.parent.chatId,
+		"text":       "Current tracking aborted, restarting now",
+		"parse_mode": "MarkdownV2",
 	})
 	err = state.parent.SetState(
 		bot,
@@ -85,13 +87,11 @@ func (state *StateTracking) UpdateTracking(bot *ubot.Bot, position *Position) (e
 		log.Fatalf("null position")
 	}
 	state.positions = append(state.positions, position)
-
-	currentPace := state.GetCurrentPace()
 	pinnedId, _ := state.parent.pinnedMessage.GetInteger("message_id")
 	bot.EditMessageText(axon.O{
 		"chat_id":    state.parent.chatId,
 		"message_id": pinnedId,
-		"text":       fmt.Sprintf("State: **tracking**, Pace: %s", currentPace),
+		"text":       "State: **tracking**",
 	})
 	return
 }
@@ -112,7 +112,7 @@ func (state *StateTracking) EndTracking(bot *ubot.Bot) (err error) {
 	return
 }
 
-func (state *StateTracking) GetGPX(ubot *ubot.Bot, matchType string) (data []byte, err error) {
+func (state *StateTracking) GetGPX(ubot *ubot.Bot, matchType string) (data []byte, mapMatched bool, err error) {
 	return makeGpx(state.positions, matchType)
 }
 

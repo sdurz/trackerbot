@@ -13,6 +13,6 @@ type State interface {
 	ResumeTracking(bot *ubot.Bot) (err error)
 	UpdateTracking(bot *ubot.Bot, position *Position) (err error)
 	EndTracking(bot *ubot.Bot) (err error)
-	GetGPX(bot *ubot.Bot, matchType string) (data []byte, err error)
+	GetGPX(bot *ubot.Bot, matchType string) (data []byte, matchOk bool, err error)
 	GetCurrentPace() *Pace
 }

@@ -38,7 +38,7 @@ func (state *StateBase) EndTracking(bot *ubot.Bot) (err error) {
 	return
 }
 
-func (state *StateBase) GetGPX(ubot *ubot.Bot, matchType string) (data []byte, err error) {
+func (state *StateBase) GetGPX(ubot *ubot.Bot, matchType string) (data []byte, mapMatched bool, err error) {
 	// no op
 	return
 }

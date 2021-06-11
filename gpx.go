@@ -5,7 +5,6 @@ import (
 	"encoding/xml"
 	"errors"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"time"
 )
@@ -17,7 +16,6 @@ type Gpx struct {
 }
 
 type Metadata struct {
-	Link Link   `xml:"link"`
 	Time string `xml:"time"`
 }
 
@@ -41,7 +39,7 @@ type TrkptEl struct {
 	XMLName interface{} `xml:"trkpt"`
 }
 
-func makeGpx(positions []*Position, vehicle string) (result []byte, err error) {
+func makeGpx(positions []*Position, vehicle string) (result []byte, matchOk bool, err error) {
 	if len(positions) == 0 {
 		err = errors.New("empty positions in status")
 		return
@@ -50,9 +48,6 @@ func makeGpx(positions []*Position, vehicle string) (result []byte, err error) {
 	now := time.Now()
 	gpx := Gpx{
 		Metadata: Metadata{
-			Link: Link{
-				Text: "Garmin International",
-			},
 			Time: now.Format(time.RFC3339),
 		},
 		Trk: Trk{
@@ -69,23 +64,32 @@ func makeGpx(positions []*Position, vehicle string) (result []byte, err error) {
 			Lon:  el.longitude,
 		})
 	}
-	if result, err = xml.MarshalIndent(gpx, "", " "); err != nil {
+
+	var raw []byte
+	if raw, err = xml.MarshalIndent(gpx, "", " "); err != nil {
 		return
 	}
 	if vehicle != "" {
-		result, err = mapMatch(result, vehicle)
+		if result, err = mapMatch(raw, vehicle); err != nil {
+			result = raw
+		} else {
+			matchOk = true
+		}
 	}
 	return
 }
 
 func mapMatch(data []byte, vehicle string) (result []byte, err error) {
-	log.Println("Map matching .gpx file")
-	resp, err := http.Post(graphHopperUrl+"/match?vehicle="+vehicle+"&type=gpx", "application/gpx+xml", bytes.NewBuffer(data))
-	if err != nil {
+	var resp *http.Response
+	if resp, err = http.Post(graphHopperUrl+"/match?vehicle="+vehicle+"&type=gpx", "application/gpx+xml", bytes.NewBuffer(data)); err != nil {
 		return
 	}
 	defer resp.Body.Close()
 
-	result, err = ioutil.ReadAll(resp.Body)
+	if resp.StatusCode >= 200 && resp.StatusCode < 300 {
+		result, err = ioutil.ReadAll(resp.Body)
+	} else {
+		err = errors.New("graphhopper request outcome status: " + resp.Status)
+	}
 	return
 }

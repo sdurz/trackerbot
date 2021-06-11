@@ -10,9 +10,10 @@ type StateStarted struct {
 }
 
 func (state *StateStarted) EnterState(bot *ubot.Bot, message axon.O) (err error) {
+	userName, _ := message.GetString("")
 	bot.SendMessage(axon.O{
 		"chat_id": state.parent.chatId,
-		"text":    "Hello! Share your position to start tracking",
+		"text":    "Hello " + userName + "! Share your position to start tracking",
 		"reply_markup": axon.O{
 			"remove_keyboard": true,
 		},

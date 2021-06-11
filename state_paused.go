@@ -18,7 +18,7 @@ func (state *StatePaused) EnterState(bot *ubot.Bot, message axon.O) (err error) 
 	bot.EditMessageText(axon.O{
 		"chat_id":    state.parent.chatId,
 		"message_id": pinnedId,
-		"text":       "State: **paused**, Pace: --:--",
+		"text":       "State: **paused**",
 	})
 
 	_, err = bot.SendMessage(axon.O{

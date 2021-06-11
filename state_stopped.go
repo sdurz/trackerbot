@@ -1,16 +1,13 @@
 package main
 
 import (
-	"errors"
-
 	"github.com/sdurz/axon"
 	"github.com/sdurz/ubot"
 )
 
 type StateStopped struct {
 	StateBase
-	positions     []*Position
-	downloadCount int64
+	positions []*Position
 }
 
 func (state *StateStopped) EnterState(bot *ubot.Bot, message axon.O) (err error) {
@@ -43,25 +40,6 @@ func (state *StateStopped) BeginTracking(bot *ubot.Bot, position *Position) (err
 	return
 }
 
-func (state *StateStopped) GetGPX(bot *ubot.Bot, matchType string) (reesult []byte, err error) {
-	if state.downloadCount < 10 {
-		reesult, err = makeGpx(state.positions, matchType)
-		state.downloadCount++
-		if state.downloadCount == 10 {
-			bot.SendMessage(axon.O{
-				"chat_id": state.parent.chatId,
-				"text":    "Maximum no. of downloads reached",
-				"reply_markup": axon.O{
-					"remove_keyboard": true,
-				},
-			})
-		}
-	} else {
-		bot.SendMessage(axon.O{
-			"chat_id": state.parent.chatId,
-			"text":    "Max no. of downloads exceeded",
-		})
-		err = errors.New("to many downloads")
-	}
-	return
+func (state *StateStopped) GetGPX(bot *ubot.Bot, matchType string) (result []byte, mapMatched bool, err error) {
+	return makeGpx(state.positions, state.parent.vehicle)
 }

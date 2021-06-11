@@ -59,13 +59,21 @@ func (s *Chat) UpdatePosition(bot *ubot.Bot, position *Position) {
 }
 
 func (s *Chat) SendGPX(bot *ubot.Bot) (result []byte, err error) {
-	if byteData, err := s.state.GetGPX(bot, s.vehicle); err == nil {
+	if byteData, mapMatched, err := s.state.GetGPX(bot, s.vehicle); err == nil {
+		if !mapMatched {
+			bot.SendMessage(axon.O{
+				"text":       "*Warning*: map matching failed, returning raw positions only",
+				"parse_mode": "MarkdownV2",
+			})
+		}
+
 		fileName := fmt.Sprintf("TelegramTrack-%v.gpx", time.Now().Format("20060102-150405"))
-		uploadFile, _ := ubot.NewBytesUploadFile(fileName, byteData)
-		bot.SendDocument(axon.O{
-			"chat_id":  s.chatId,
-			"document": uploadFile,
-		})
+		if uploadFile, err := ubot.NewBytesUploadFile(fileName, byteData); err == nil {
+			bot.SendDocument(axon.O{
+				"chat_id":  s.chatId,
+				"document": uploadFile,
+			})
+		}
 	}
 	return
 }
