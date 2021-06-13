@@ -91,7 +91,7 @@ func (state *StateTracking) UpdateTracking(bot *ubot.Bot, position *Position) (e
 	bot.EditMessageText(axon.O{
 		"chat_id":    state.parent.chatId,
 		"message_id": pinnedId,
-		"text":       "State: **tracking**",
+		"text":       "State: tracking",
 	})
 	return
 }
@@ -100,7 +100,7 @@ func (state *StateTracking) EndTracking(bot *ubot.Bot) (err error) {
 	bot.SendMessage(axon.O{
 		"chat_id":    state.parent.chatId,
 		"parse_mode": "MarkdownV2",
-		"text":       fmt.Sprintf("Stopped at **%s**", time.Now().Format("15:04:05")),
+		"text":       fmt.Sprintf("Stopped at *%s*", time.Now().Format("15:04:05")),
 	})
 	state.parent.SetState(bot, &StateStopped{
 		StateBase: StateBase{

@@ -40,7 +40,6 @@ func doWhileLockingChatId(bot *ubot.Bot, chatIdPropertyPath string, message axon
 				chat = NewChatStatus(bot, chatId)
 				lrucache.Add(chatId, chat)
 			}
-
 			return dispatchedFunc(chat)
 		})
 	}

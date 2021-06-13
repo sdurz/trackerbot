@@ -16,12 +16,12 @@ func (state *StateResumed) EnterState(bot *ubot.Bot, message axon.O) (err error)
 	bot.EditMessageText(axon.O{
 		"chat_id":    state.parent.chatId,
 		"message_id": pinnedId,
-		"text":       "State: **tracking**",
+		"text":       "State: tracking",
 		"parse_mode": "MarkdownV2",
 	})
 	if message, err := bot.SendMessage(axon.O{
 		"chat_id":    state.parent.chatId,
-		"text":       "Tracking **resumed** at " + time.Now().Format("15:04:05"),
+		"text":       "Tracking *resumed* at " + time.Now().Format("15:04:05"),
 		"parse_mode": "MarkdownV2",
 		"reply_markup": axon.O{
 			"keyboard": axon.A{
