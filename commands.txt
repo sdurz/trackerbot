@@ -1,4 +1,4 @@
-getgpx - get current gpx tracj
+getgpx - get current gpx track
 pause - pause tracking
 resume - resume tracking
 end - end tracking 
